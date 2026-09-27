@@ -4,6 +4,8 @@ import { ConversationListItem } from "./ConversationListItem";
 import { Spinner } from "../common/Spinner";
 import { EmptyState } from "../common/EmptyState";
 import { Button } from "../common/Button";
+import { SelectInput } from "../common/FormControls";
+import { useSalesUsers } from "../../hooks/useSalesUsers";
 
 type ConversationListProps = {
   conversations: ConversationDto[] | undefined;
@@ -25,6 +27,10 @@ export function ConversationList({
   isRefreshing,
 }: ConversationListProps) {
   const [search, setSearch] = useState("");
+  // Salesperson filter. No auth in this app yet, so the user picks which salesperson's
+  // conversations to view. Reuses assignedUserId; no hard-coded salesperson IDs.
+  const [salesUserFilter, setSalesUserFilter] = useState("");
+  const { data: salesUsers } = useSalesUsers();
 
   const sorted = useMemo(() => {
     if (!conversations) return [];
@@ -35,11 +41,14 @@ export function ConversationList({
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return sorted;
-    return sorted.filter((c) =>
-      [c.customerName, c.customerWhatsAppNumber].some((value) => value?.toLowerCase().includes(term))
-    );
-  }, [sorted, search]);
+    return sorted.filter((c) => {
+      if (salesUserFilter && c.assignedUserId !== salesUserFilter) return false;
+      if (!term) return true;
+      return [c.customerName, c.customerWhatsAppNumber, c.whatsAppDisplayPhoneNumber].some((value) =>
+        value?.toLowerCase().includes(term)
+      );
+    });
+  }, [sorted, search, salesUserFilter]);
 
   return (
     <div className="flex h-full w-full flex-col border-r border-gray-200 bg-white">
@@ -56,7 +65,7 @@ export function ConversationList({
           {isRefreshing ? <Spinner size="sm" /> : "⟳"} Refresh
         </Button>
       </div>
-      <div className="border-b border-gray-200 px-3 py-2">
+      <div className="space-y-2 border-b border-gray-200 px-3 py-2">
         <input
           type="search"
           value={search}
@@ -64,6 +73,19 @@ export function ConversationList({
           placeholder="Search by name or number..."
           className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-whatsapp-teal/40"
         />
+        <SelectInput
+          value={salesUserFilter}
+          onChange={(e) => setSalesUserFilter(e.target.value)}
+          className="!py-1.5 text-sm"
+          aria-label="Filter by salesperson"
+        >
+          <option value="">All salespeople</option>
+          {salesUsers?.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.name}
+            </option>
+          ))}
+        </SelectInput>
       </div>
       <div className="scroll-thin flex-1 overflow-y-auto">
         {isLoading && (

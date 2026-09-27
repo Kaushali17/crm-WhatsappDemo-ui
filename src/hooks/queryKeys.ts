@@ -1,6 +1,7 @@
 /** Centralized React Query cache keys to keep invalidation consistent across hooks. */
 export const queryKeys = {
   salesUsers: ["salesUsers"] as const,
+  whatsAppBusinessNumbers: ["whatsAppBusinessNumbers"] as const,
   customers: ["customers"] as const,
   customer: (id: string) => ["customers", id] as const,
   conversations: ["conversations"] as const,

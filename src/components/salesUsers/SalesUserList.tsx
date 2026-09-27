@@ -32,6 +32,7 @@ export function SalesUserList({ salesUsers, isLoading, isError }: SalesUserListP
           <tr>
             <th className="px-4 py-2 text-left font-medium text-gray-500">Name</th>
             <th className="px-4 py-2 text-left font-medium text-gray-500">Email</th>
+            <th className="px-4 py-2 text-left font-medium text-gray-500">WhatsApp Number</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -39,6 +40,16 @@ export function SalesUserList({ salesUsers, isLoading, isError }: SalesUserListP
             <tr key={user.id} className="hover:bg-gray-50">
               <td className="px-4 py-2 font-medium text-gray-900">{user.name}</td>
               <td className="px-4 py-2 text-gray-600">{user.email}</td>
+              <td className="px-4 py-2 text-gray-600">
+                {user.whatsAppDisplayPhoneNumber ? (
+                  <span className={user.whatsAppBusinessNumberActive === false ? "text-gray-400" : ""}>
+                    {user.whatsAppDisplayPhoneNumber}
+                    {user.whatsAppBusinessNumberActive === false && " (inactive)"}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">Not assigned</span>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

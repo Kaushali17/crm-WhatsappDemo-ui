@@ -3,6 +3,7 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { InboxPage } from "./pages/InboxPage";
 import { CustomersPage } from "./pages/CustomersPage";
 import { SalesUsersPage } from "./pages/SalesUsersPage";
+import { WhatsAppNumbersPage } from "./pages/WhatsAppNumbersPage";
 import { SimulateWebhookPage } from "./pages/SimulateWebhookPage";
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route path="/inbox" element={<InboxPage />} />
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/sales-users" element={<SalesUsersPage />} />
+        <Route path="/whatsapp-numbers" element={<WhatsAppNumbersPage />} />
         <Route path="/simulate" element={<SimulateWebhookPage />} />
         <Route path="*" element={<Navigate to="/inbox" replace />} />
       </Route>

@@ -64,6 +64,24 @@ export function InboxPage() {
                   {conversation.customerName || conversation.customerWhatsAppNumber}
                 </h2>
                 <p className="text-xs text-gray-500">{conversation.customerWhatsAppNumber}</p>
+                {(conversation.assignedUserName || conversation.whatsAppDisplayPhoneNumber) && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {conversation.assignedUserName && (
+                      <span>
+                        Handled by: <span className="font-medium text-gray-700">{conversation.assignedUserName}</span>
+                      </span>
+                    )}
+                    {conversation.assignedUserName && conversation.whatsAppDisplayPhoneNumber && (
+                      <span className="mx-1 text-gray-300">·</span>
+                    )}
+                    {conversation.whatsAppDisplayPhoneNumber && (
+                      <span>
+                        WhatsApp:{" "}
+                        <span className="font-medium text-gray-700">{conversation.whatsAppDisplayPhoneNumber}</span>
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
             </div>
             <MessageThread
@@ -73,6 +91,7 @@ export function InboxPage() {
             />
             <Composer
               key={conversation.id}
+              conversationId={conversation.id}
               phoneNumber={conversation.customerWhatsAppNumber}
               disabled={conversation.status.toLowerCase() === "closed"}
             />

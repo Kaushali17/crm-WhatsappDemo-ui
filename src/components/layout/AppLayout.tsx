@@ -4,6 +4,7 @@ const navItems = [
   { to: "/inbox", label: "Inbox", icon: "💬" },
   { to: "/customers", label: "Customers", icon: "👤" },
   { to: "/sales-users", label: "Sales Users", icon: "🧑‍💼" },
+  { to: "/whatsapp-numbers", label: "WhatsApp Numbers", icon: "📱" },
   { to: "/simulate", label: "Simulate", icon: "🛠️" },
 ];
 

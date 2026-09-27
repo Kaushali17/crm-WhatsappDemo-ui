@@ -49,6 +49,18 @@ export function ConversationDetailsPanel({ conversation }: ConversationDetailsPa
       </div>
 
       <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+          WhatsApp Business Number
+        </h3>
+        <p className="mt-1 text-sm text-gray-700">
+          {conversation.whatsAppDisplayPhoneNumber || "Not linked to a business number"}
+        </p>
+        {conversation.assignedUserName && (
+          <p className="text-xs text-gray-500">Handled by {conversation.assignedUserName}</p>
+        )}
+      </div>
+
+      <div>
         <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Status</h3>
         <div className="mt-1">
           <StatusBadge status={conversation.status} />

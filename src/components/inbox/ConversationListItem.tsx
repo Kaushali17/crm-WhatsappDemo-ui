@@ -25,10 +25,15 @@ export function ConversationListItem({ conversation, selected, onClick }: Conver
       </div>
       <div className="flex items-center justify-between gap-2">
         <span className="truncate text-xs text-gray-500">
-          {conversation.assignedUserName ? `Assigned: ${conversation.assignedUserName}` : "Unassigned"}
+          {conversation.assignedUserName ? `Sales: ${conversation.assignedUserName}` : "Unassigned"}
         </span>
         <StatusBadge status={conversation.status} />
       </div>
+      {conversation.whatsAppDisplayPhoneNumber && (
+        <span className="truncate text-xs text-gray-400">
+          WhatsApp: {conversation.whatsAppDisplayPhoneNumber}
+        </span>
+      )}
     </button>
   );
 }
