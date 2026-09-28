@@ -1,12 +1,21 @@
 import axios, { type AxiosError } from "axios";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7xxx";
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7226";
+
+// Temporary debug log: confirms the API base URL baked into the build (visible in DevTools).
+console.log("VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
 
 export const apiClient = axios.create({
   baseURL,
   headers: {
     "Content-Type": "application/json",
   },
+});
+
+// Temporary debug log: prints the final URL of every outgoing API request.
+apiClient.interceptors.request.use((config) => {
+  console.log("API request:", `${config.baseURL ?? ""}${config.url ?? ""}`);
+  return config;
 });
 
 /** Resolves a possibly-relative media path from the API to an absolute, openable URL. */
