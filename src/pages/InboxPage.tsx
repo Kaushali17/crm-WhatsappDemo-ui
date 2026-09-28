@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { ConversationList } from "../components/inbox/ConversationList";
 import { MessageThread } from "../components/inbox/MessageThread";
 import { Composer } from "../components/inbox/Composer";
 import { ConversationDetailsPanel } from "../components/inbox/ConversationDetailsPanel";
+import { NewConversationModal } from "../components/inbox/NewConversationModal";
 import { EmptyState } from "../components/common/EmptyState";
 import { useConversation, useConversations } from "../hooks/useConversations";
 import { useMessages } from "../hooks/useMessages";
@@ -11,12 +13,16 @@ import { queryKeys } from "../hooks/queryKeys";
 import type { ConversationDto } from "../types";
 
 export function InboxPage() {
+  const [searchParams] = useSearchParams();
+  const conversationIdParam = searchParams.get("conversationId") ?? undefined;
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [newConversationOpen, setNewConversationOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const conversationsQuery = useConversations();
-  // Fall back to the newest conversation until the user picks one explicitly.
-  const effectiveSelectedId = selectedId ?? conversationsQuery.data?.[0]?.id;
+  // Preselect a conversation passed via ?conversationId (e.g. after sending a template),
+  // then the user's explicit pick, then fall back to the newest conversation.
+  const effectiveSelectedId = selectedId ?? conversationIdParam ?? conversationsQuery.data?.[0]?.id;
   const selectedConversationQuery = useConversation(effectiveSelectedId);
   const messagesQuery = useMessages(effectiveSelectedId);
 
@@ -29,6 +35,17 @@ export function InboxPage() {
     if (effectiveSelectedId) {
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(effectiveSelectedId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.conversation(effectiveSelectedId) });
+    }
+  };
+
+  // After a template starts a conversation, select/open it (the send hook already refreshes the
+  // conversation list and its messages). Falls back to a general refresh if no id is returned.
+  const handleConversationCreated = (conversationId: string | undefined) => {
+    setNewConversationOpen(false);
+    if (conversationId) {
+      setSelectedId(conversationId);
+    } else {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
     }
   };
 
@@ -45,6 +62,7 @@ export function InboxPage() {
           onSelect={handleSelect}
           onRefresh={handleRefreshAll}
           isRefreshing={conversationsQuery.isFetching}
+          onNewConversation={() => setNewConversationOpen(true)}
         />
       </div>
 
@@ -98,6 +116,14 @@ export function InboxPage() {
           </div>
           <ConversationDetailsPanel conversation={conversation} />
         </div>
+      )}
+
+      {newConversationOpen && (
+        <NewConversationModal
+          open={newConversationOpen}
+          onClose={() => setNewConversationOpen(false)}
+          onCreated={handleConversationCreated}
+        />
       )}
     </div>
   );

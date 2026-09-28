@@ -1,19 +1,23 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { CustomerTable } from "../components/customers/CustomerTable";
 import { CustomerFormModal, type CustomerFormValues } from "../components/customers/CustomerFormModal";
+import { SendMessageModal } from "../components/customers/SendMessageModal";
 import { Button } from "../components/common/Button";
 import { useCreateCustomer, useCustomers, useUpdateCustomer } from "../hooks/useCustomers";
 import { getApiErrorMessage } from "../api/client";
 import type { CustomerDto } from "../types";
 
 export function CustomersPage() {
+  const navigate = useNavigate();
   const customersQuery = useCustomers();
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerDto | undefined>(undefined);
+  const [messageCustomer, setMessageCustomer] = useState<CustomerDto | undefined>(undefined);
 
   const openAddModal = () => {
     setEditingCustomer(undefined);
@@ -23,6 +27,12 @@ export function CustomersPage() {
   const openEditModal = (customer: CustomerDto) => {
     setEditingCustomer(customer);
     setModalOpen(true);
+  };
+
+  const handleMessageSent = (conversationId: string | undefined) => {
+    setMessageCustomer(undefined);
+    // Open the conversation the backend created/updated so the sent message is visible.
+    navigate(conversationId ? `/inbox?conversationId=${conversationId}` : "/inbox");
   };
 
   const handleSubmit = (values: CustomerFormValues) => {
@@ -66,6 +76,7 @@ export function CustomersPage() {
         isLoading={customersQuery.isLoading}
         isError={customersQuery.isError}
         onEdit={openEditModal}
+        onSendMessage={setMessageCustomer}
       />
 
       {modalOpen && (
@@ -76,6 +87,15 @@ export function CustomersPage() {
           isSubmitting={createCustomer.isPending || updateCustomer.isPending}
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
+        />
+      )}
+
+      {messageCustomer && (
+        <SendMessageModal
+          open={Boolean(messageCustomer)}
+          customer={messageCustomer}
+          onClose={() => setMessageCustomer(undefined)}
+          onSent={handleMessageSent}
         />
       )}
     </div>

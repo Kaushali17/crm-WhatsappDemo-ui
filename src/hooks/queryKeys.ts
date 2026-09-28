@@ -2,6 +2,8 @@
 export const queryKeys = {
   salesUsers: ["salesUsers"] as const,
   whatsAppBusinessNumbers: ["whatsAppBusinessNumbers"] as const,
+  whatsAppNumbers: ["whatsAppNumbers"] as const,
+  whatsAppTemplates: ["whatsAppTemplates"] as const,
   customers: ["customers"] as const,
   customer: (id: string) => ["customers", id] as const,
   conversations: ["conversations"] as const,

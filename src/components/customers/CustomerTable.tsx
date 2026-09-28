@@ -9,9 +9,16 @@ type CustomerTableProps = {
   isLoading: boolean;
   isError: boolean;
   onEdit: (customer: CustomerDto) => void;
+  onSendMessage: (customer: CustomerDto) => void;
 };
 
-export function CustomerTable({ customers, isLoading, isError, onEdit }: CustomerTableProps) {
+export function CustomerTable({
+  customers,
+  isLoading,
+  isError,
+  onEdit,
+  onSendMessage,
+}: CustomerTableProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center py-10">
@@ -48,6 +55,13 @@ export function CustomerTable({ customers, isLoading, isError, onEdit }: Custome
               <td className="px-4 py-2 text-gray-600">{customer.assignedUserName || "Unassigned"}</td>
               <td className="px-4 py-2 text-gray-600">{formatDate(customer.createdAt)}</td>
               <td className="px-4 py-2 text-right">
+                <Button
+                  variant="ghost"
+                  className="!px-2 !py-1 text-xs"
+                  onClick={() => onSendMessage(customer)}
+                >
+                  Message
+                </Button>
                 <Button variant="ghost" className="!px-2 !py-1 text-xs" onClick={() => onEdit(customer)}>
                   Edit
                 </Button>

@@ -15,6 +15,7 @@ type ConversationListProps = {
   onSelect: (conversation: ConversationDto) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
+  onNewConversation: () => void;
 };
 
 export function ConversationList({
@@ -25,6 +26,7 @@ export function ConversationList({
   onSelect,
   onRefresh,
   isRefreshing,
+  onNewConversation,
 }: ConversationListProps) {
   const [search, setSearch] = useState("");
   // Salesperson filter. No auth in this app yet, so the user picks which salesperson's
@@ -63,6 +65,11 @@ export function ConversationList({
           title="Refresh conversations"
         >
           {isRefreshing ? <Spinner size="sm" /> : "⟳"} Refresh
+        </Button>
+      </div>
+      <div className="border-b border-gray-200 px-3 py-2">
+        <Button type="button" onClick={onNewConversation} className="w-full">
+          + New Conversation
         </Button>
       </div>
       <div className="space-y-2 border-b border-gray-200 px-3 py-2">

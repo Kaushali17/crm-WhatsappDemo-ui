@@ -13,6 +13,15 @@ export function useWhatsAppBusinessNumbers() {
   });
 }
 
+// Active/assignable WhatsApp Business numbers from GET /api/whatsapp/numbers. React Query
+// dedupes concurrent calls sharing this key, so mounting the selector never double-fetches.
+export function useWhatsAppNumbers() {
+  return useQuery({
+    queryKey: queryKeys.whatsAppNumbers,
+    queryFn: whatsappBusinessNumbersApi.getWhatsAppNumbers,
+  });
+}
+
 export function useCreateWhatsAppBusinessNumber() {
   const queryClient = useQueryClient();
   return useMutation({

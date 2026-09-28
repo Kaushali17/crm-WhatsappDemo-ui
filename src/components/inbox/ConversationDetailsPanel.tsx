@@ -6,6 +6,7 @@ import { StatusBadge } from "../common/StatusBadge";
 import { Button } from "../common/Button";
 import { SelectInput } from "../common/FormControls";
 import { Spinner } from "../common/Spinner";
+import { WhatsAppNumberSelector } from "./WhatsAppNumberSelector";
 import { formatDate } from "../../utils/date";
 import type { ConversationDto } from "../../types";
 
@@ -52,11 +53,11 @@ export function ConversationDetailsPanel({ conversation }: ConversationDetailsPa
         <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
           WhatsApp Business Number
         </h3>
-        <p className="mt-1 text-sm text-gray-700">
-          {conversation.whatsAppDisplayPhoneNumber || "Not linked to a business number"}
-        </p>
+        <div className="mt-1">
+          <WhatsAppNumberSelector assignedUserId={conversation.assignedUserId} />
+        </div>
         {conversation.assignedUserName && (
-          <p className="text-xs text-gray-500">Handled by {conversation.assignedUserName}</p>
+          <p className="mt-1 text-xs text-gray-500">Handled by {conversation.assignedUserName}</p>
         )}
       </div>
 
