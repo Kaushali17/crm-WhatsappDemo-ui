@@ -8,6 +8,7 @@ import { FieldLabel, SelectInput, TextInput } from "../common/FormControls";
 import { CustomerFormModal, type CustomerFormValues } from "../customers/CustomerFormModal";
 import { useCustomers, useCreateCustomer } from "../../hooks/useCustomers";
 import { useSendTemplateMessage, useWhatsAppTemplates } from "../../hooks/useWhatsapp";
+import { useWhatsAppBusinessNumbers } from "../../hooks/useWhatsappBusinessNumbers";
 import { getApiErrorMessage } from "../../api/client";
 import type { CustomerDto, WhatsAppTemplateDto } from "../../types";
 
@@ -43,6 +44,7 @@ function getPlaceholderIndexes(text: string): number[] {
 export function NewConversationModal({ open, onClose, onCreated }: NewConversationModalProps) {
   const [customerSearch, setCustomerSearch] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [selectedSalesUserId, setSelectedSalesUserId] = useState("");
   const [selectedTemplateName, setSelectedTemplateName] = useState("");
   // Keyed by `${templateName}:${index}` so switching template preserves per-template edits and
   // never needs a reset effect.
@@ -51,10 +53,16 @@ export function NewConversationModal({ open, onClose, onCreated }: NewConversati
 
   const customersQuery = useCustomers();
   const templatesQuery = useWhatsAppTemplates();
+  const businessNumbersQuery = useWhatsAppBusinessNumbers();
   const sendTemplate = useSendTemplateMessage();
   const createCustomer = useCreateCustomer();
 
   const customers = customersQuery.data;
+  // Salesperson -> WhatsApp Business number mapping. Only active numbers with a salesperson can
+  // be picked; the backend maps the chosen salesUserId to the PhoneNumberId to send from.
+  const businessNumbers = (businessNumbersQuery.data ?? []).filter(
+    (n) => n.isActive && n.salesUserId
+  );
   // Only templates the backend reports as APPROVED can be sent via Meta.
   const approvedTemplates = (templatesQuery.data ?? []).filter(
     (t) => t.status?.toUpperCase() === "APPROVED"
@@ -65,6 +73,9 @@ export function NewConversationModal({ open, onClose, onCreated }: NewConversati
     (t) => t.name === effectiveTemplateName
   );
   const selectedCustomer: CustomerDto | undefined = customers?.find((c) => c.id === selectedCustomerId);
+
+  // Default to the first active salesperson number; computed inline (no reset effects).
+  const effectiveSalesUserId = selectedSalesUserId || businessNumbers[0]?.salesUserId || "";
 
   const bodyText = selectedTemplate ? getTemplateBodyText(selectedTemplate) : "";
   const placeholderIndexes = getPlaceholderIndexes(bodyText);
@@ -112,6 +123,10 @@ export function NewConversationModal({ open, onClose, onCreated }: NewConversati
       toast.error("Select an approved template.");
       return;
     }
+    if (businessNumbers.length > 0 && !effectiveSalesUserId) {
+      toast.error("Select a salesperson.");
+      return;
+    }
     const missing = placeholderIndexes.find((i) => !paramValue(i).trim());
     if (missing !== undefined) {
       toast.error(`Fill in the value for {{${missing}}}.`);
@@ -124,6 +139,8 @@ export function NewConversationModal({ open, onClose, onCreated }: NewConversati
         customerId: selectedCustomer.id,
         conversationId: null,
         whatsAppBusinessNumberId: null,
+        // Backend maps this salesperson to their WhatsApp Business number / PhoneNumberId.
+        salesUserId: effectiveSalesUserId || null,
         templateName: selectedTemplate.name,
         languageCode: selectedTemplate.languageCode,
         // Ordered exactly by the template's {{n}} placeholders.
@@ -203,6 +220,37 @@ export function NewConversationModal({ open, onClose, onCreated }: NewConversati
                   )}
                 </p>
               </div>
+            )}
+          </div>
+
+          {/* Salesperson selection — maps salesperson -> WhatsApp Business number.
+              The backend uses the chosen salesUserId to decide which PhoneNumberId to send from. */}
+          <div>
+            <FieldLabel label="Salesperson" htmlFor="new-conv-salesperson" required />
+            {businessNumbersQuery.isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Spinner size="sm" />
+              </div>
+            ) : businessNumbersQuery.isError ? (
+              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+                Failed to load WhatsApp Business numbers. Try again.
+              </p>
+            ) : businessNumbers.length === 0 ? (
+              <p className="rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                No active WhatsApp Business numbers. The backend will pick the sender.
+              </p>
+            ) : (
+              <SelectInput
+                id="new-conv-salesperson"
+                value={effectiveSalesUserId}
+                onChange={(e) => setSelectedSalesUserId(e.target.value)}
+              >
+                {businessNumbers.map((n) => (
+                  <option key={n.id} value={n.salesUserId}>
+                    {n.salesUserName ?? "Unassigned"} → {n.displayPhoneNumber}
+                  </option>
+                ))}
+              </SelectInput>
             )}
           </div>
 

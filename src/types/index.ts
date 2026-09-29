@@ -169,6 +169,9 @@ export type SendTemplateRequest = {
   customerId: string;
   conversationId?: string | null;
   whatsAppBusinessNumberId?: string | null;
+  // The chosen salesperson; the backend maps this to their WhatsApp Business number and decides
+  // which Meta PhoneNumberId to send from. The frontend never chooses the PhoneNumberId.
+  salesUserId?: string | null;
   templateName: string;
   languageCode: string;
   parameters: TemplateParameter[];
