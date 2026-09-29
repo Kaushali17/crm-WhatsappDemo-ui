@@ -3,10 +3,10 @@ import { customersApi } from "../api/customers";
 import { queryKeys } from "./queryKeys";
 import type { CreateCustomerRequest, UpdateCustomerRequest } from "../types";
 
-export function useCustomers() {
+export function useCustomers(salesUserId?: string) {
   return useQuery({
-    queryKey: queryKeys.customers,
-    queryFn: customersApi.getAll,
+    queryKey: queryKeys.customersList(salesUserId),
+    queryFn: () => customersApi.getAll(salesUserId),
   });
 }
 

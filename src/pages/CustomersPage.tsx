@@ -6,12 +6,15 @@ import { CustomerFormModal, type CustomerFormValues } from "../components/custom
 import { SendMessageModal } from "../components/customers/SendMessageModal";
 import { Button } from "../components/common/Button";
 import { useCreateCustomer, useCustomers, useUpdateCustomer } from "../hooks/useCustomers";
+import { useCurrentUser } from "../auth/currentUser";
 import { getApiErrorMessage } from "../api/client";
 import type { CustomerDto } from "../types";
 
 export function CustomersPage() {
   const navigate = useNavigate();
-  const customersQuery = useCustomers();
+  // Admin sees all customers; a salesperson is scoped to their own (backend enforces this).
+  const { conversationScopeUserId } = useCurrentUser();
+  const customersQuery = useCustomers(conversationScopeUserId);
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
 

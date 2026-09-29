@@ -2,8 +2,12 @@ import { apiClient } from "./client";
 import type { ChatMessageDto, ConversationDto } from "../types";
 
 export const conversationsApi = {
-  getAll: async (): Promise<ConversationDto[]> => {
-    const { data } = await apiClient.get<ConversationDto[]>("/api/conversations");
+  getAll: async (salesUserId?: string): Promise<ConversationDto[]> => {
+    // Admin passes no salesUserId (all conversations); a salesperson (or an Admin filtering by
+    // salesperson) passes an id. The backend authorizes and returns the appropriate set.
+    const { data } = await apiClient.get<ConversationDto[]>("/api/conversations", {
+      params: salesUserId ? { salesUserId } : undefined,
+    });
     return data;
   },
 

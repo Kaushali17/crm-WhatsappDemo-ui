@@ -9,17 +9,22 @@ import { NewConversationModal } from "../components/inbox/NewConversationModal";
 import { EmptyState } from "../components/common/EmptyState";
 import { useConversation, useConversations } from "../hooks/useConversations";
 import { useMessages } from "../hooks/useMessages";
+import { useCurrentUser } from "../auth/currentUser";
 import { queryKeys } from "../hooks/queryKeys";
 import type { ConversationDto } from "../types";
 
 export function InboxPage() {
   const [searchParams] = useSearchParams();
-  const conversationIdParam = searchParams.get("conversationId") ?? undefined;
-  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const conversationIdParam = searchParams.get("conversationId") ?? undefined;  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [newConversationOpen, setNewConversationOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const conversationsQuery = useConversations();
+  const { isAdmin, conversationScopeUserId } = useCurrentUser();
+  // Admin can filter by a chosen salesperson; a salesperson is always scoped to their own id.
+  const [salesUserFilter, setSalesUserFilter] = useState("");
+  const conversationsSalesUserId = isAdmin ? salesUserFilter || undefined : conversationScopeUserId;
+
+  const conversationsQuery = useConversations(conversationsSalesUserId);
   // Preselect a conversation passed via ?conversationId (e.g. after sending a template),
   // then the user's explicit pick, then fall back to the newest conversation.
   const effectiveSelectedId = selectedId ?? conversationIdParam ?? conversationsQuery.data?.[0]?.id;
@@ -37,7 +42,6 @@ export function InboxPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.conversation(effectiveSelectedId) });
     }
   };
-
   // After a template starts a conversation, select/open it (the send hook already refreshes the
   // conversation list and its messages). Falls back to a general refresh if no id is returned.
   const handleConversationCreated = (conversationId: string | undefined) => {
@@ -63,6 +67,9 @@ export function InboxPage() {
           onRefresh={handleRefreshAll}
           isRefreshing={conversationsQuery.isFetching}
           onNewConversation={() => setNewConversationOpen(true)}
+          showSalesUserFilter={isAdmin}
+          salesUserFilter={salesUserFilter}
+          onSalesUserFilterChange={setSalesUserFilter}
         />
       </div>
 
@@ -111,6 +118,7 @@ export function InboxPage() {
               key={conversation.id}
               conversationId={conversation.id}
               phoneNumber={conversation.customerWhatsAppNumber}
+              whatsAppBusinessNumberId={conversation.whatsAppBusinessNumberId}
               disabled={conversation.status.toLowerCase() === "closed"}
             />
           </div>

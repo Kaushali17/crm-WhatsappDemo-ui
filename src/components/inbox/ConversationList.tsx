@@ -16,6 +16,11 @@ type ConversationListProps = {
   onRefresh: () => void;
   isRefreshing: boolean;
   onNewConversation: () => void;
+  // Admin-only salesperson filter. The value drives the backend query (?salesUserId=); the list
+  // is never filtered by role on the client. Hidden for non-Admin users.
+  showSalesUserFilter: boolean;
+  salesUserFilter: string;
+  onSalesUserFilterChange: (value: string) => void;
 };
 
 export function ConversationList({
@@ -27,11 +32,11 @@ export function ConversationList({
   onRefresh,
   isRefreshing,
   onNewConversation,
+  showSalesUserFilter,
+  salesUserFilter,
+  onSalesUserFilterChange,
 }: ConversationListProps) {
   const [search, setSearch] = useState("");
-  // Salesperson filter. No auth in this app yet, so the user picks which salesperson's
-  // conversations to view. Reuses assignedUserId; no hard-coded salesperson IDs.
-  const [salesUserFilter, setSalesUserFilter] = useState("");
   const { data: salesUsers } = useSalesUsers();
 
   const sorted = useMemo(() => {
@@ -41,16 +46,16 @@ export function ConversationList({
     );
   }, [conversations]);
 
+  // Text search only. Salesperson scoping is handled by the backend via the query param, not here.
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return sorted.filter((c) => {
-      if (salesUserFilter && c.assignedUserId !== salesUserFilter) return false;
-      if (!term) return true;
-      return [c.customerName, c.customerWhatsAppNumber, c.whatsAppDisplayPhoneNumber].some((value) =>
-        value?.toLowerCase().includes(term)
-      );
-    });
-  }, [sorted, search, salesUserFilter]);
+    if (!term) return sorted;
+    return sorted.filter((c) =>
+      [c.customerName, c.customerWhatsAppNumber, c.whatsAppDisplayPhoneNumber, c.assignedUserName].some(
+        (value) => value?.toLowerCase().includes(term)
+      )
+    );
+  }, [sorted, search]);
 
   return (
     <div className="flex h-full w-full flex-col border-r border-gray-200 bg-white">
@@ -80,19 +85,21 @@ export function ConversationList({
           placeholder="Search by name or number..."
           className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-whatsapp-teal/40"
         />
-        <SelectInput
-          value={salesUserFilter}
-          onChange={(e) => setSalesUserFilter(e.target.value)}
-          className="!py-1.5 text-sm"
-          aria-label="Filter by salesperson"
-        >
-          <option value="">All salespeople</option>
-          {salesUsers?.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.name}
-            </option>
-          ))}
-        </SelectInput>
+        {showSalesUserFilter && (
+          <SelectInput
+            value={salesUserFilter}
+            onChange={(e) => onSalesUserFilterChange(e.target.value)}
+            className="!py-1.5 text-sm"
+            aria-label="Filter by salesperson"
+          >
+            <option value="">All salespeople</option>
+            {salesUsers?.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
+          </SelectInput>
+        )}
       </div>
       <div className="scroll-thin flex-1 overflow-y-auto">
         {isLoading && (

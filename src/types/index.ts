@@ -1,9 +1,15 @@
 // DTO types mirroring the .NET Web API contract exactly. Keep in sync with the backend.
 
+// Authorization role returned by the backend. The backend is the source of truth; the frontend
+// never derives Admin status from a hard-coded salesperson id.
+export type SalesUserRole = "Admin" | "Salesperson" | string;
+
 export type SalesUserDto = {
   id: string;
   name: string;
   email: string;
+  // Role drives Admin vs Salesperson UI. Optional so older backend responses keep working.
+  role?: SalesUserRole;
   // Optional business-number info, only present if the backend chooses to include it.
   whatsAppBusinessNumberId?: string;
   whatsAppDisplayPhoneNumber?: string;
@@ -57,6 +63,9 @@ export type ConversationDto = {
   status: ConversationStatus;
   createdAt: string;
   lastMessageAt: string;
+  // Optional list-preview fields, only present if the backend returns them.
+  lastMessage?: string;
+  unreadCount?: number;
 };
 
 export type MessageDirection = "Incoming" | "Outgoing";
@@ -90,6 +99,10 @@ export type SendWhatsAppMessageRequest = {
   // Backend prefers conversationId to resolve the sender's business number; phoneNumber is
   // kept for backward compatibility. The frontend never chooses the Meta PhoneNumberId.
   conversationId?: string;
+  // The conversation's WhatsApp Business number. Sent so a message always goes through the
+  // owning salesperson's number — e.g. an Admin replying in another salesperson's conversation
+  // uses that conversation's number, never the Admin's. The frontend never sends Meta secrets.
+  whatsAppBusinessNumberId?: string;
   phoneNumber: string;
   message?: string;
   messageType: MessageType;

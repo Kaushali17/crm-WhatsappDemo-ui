@@ -57,6 +57,9 @@ export function getApiErrorMessage(error: unknown): string {
       if ("message" in data && data.message) return data.message as string;
     }
 
+    if (axiosError.response?.status === 403) {
+      return "You are not authorized to perform this action.";
+    }
     if (axiosError.response?.status === 404) return "The requested resource was not found.";
     if (axiosError.code === "ERR_NETWORK") {
       return "Could not reach the API. Check that the backend is running and VITE_API_BASE_URL is correct.";

@@ -9,6 +9,7 @@ import { CustomerFormModal, type CustomerFormValues } from "../customers/Custome
 import { useCustomers, useCreateCustomer } from "../../hooks/useCustomers";
 import { useSendTemplateMessage, useWhatsAppTemplates } from "../../hooks/useWhatsapp";
 import { useWhatsAppBusinessNumbers } from "../../hooks/useWhatsappBusinessNumbers";
+import { useCurrentUser } from "../../auth/currentUser";
 import { getApiErrorMessage } from "../../api/client";
 import type { CustomerDto, WhatsAppTemplateDto } from "../../types";
 
@@ -56,6 +57,7 @@ export function NewConversationModal({ open, onClose, onCreated }: NewConversati
   const businessNumbersQuery = useWhatsAppBusinessNumbers();
   const sendTemplate = useSendTemplateMessage();
   const createCustomer = useCreateCustomer();
+  const { currentUser } = useCurrentUser();
 
   const customers = customersQuery.data;
   // Salesperson -> WhatsApp Business number mapping. Only active numbers with a salesperson can
@@ -74,8 +76,14 @@ export function NewConversationModal({ open, onClose, onCreated }: NewConversati
   );
   const selectedCustomer: CustomerDto | undefined = customers?.find((c) => c.id === selectedCustomerId);
 
-  // Default to the first active salesperson number; computed inline (no reset effects).
-  const effectiveSalesUserId = selectedSalesUserId || businessNumbers[0]?.salesUserId || "";
+  // Default to the current user's number if they have one, else the first active number.
+  // Computed inline (no reset effects).
+  const currentUserHasNumber = businessNumbers.some((n) => n.salesUserId === currentUser?.id);
+  const effectiveSalesUserId =
+    selectedSalesUserId ||
+    (currentUserHasNumber ? currentUser?.id : undefined) ||
+    businessNumbers[0]?.salesUserId ||
+    "";
 
   const bodyText = selectedTemplate ? getTemplateBodyText(selectedTemplate) : "";
   const placeholderIndexes = getPlaceholderIndexes(bodyText);

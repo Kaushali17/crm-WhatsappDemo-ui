@@ -9,11 +9,14 @@ import type { MediaUploadResponse } from "../../types";
 type ComposerProps = {
   conversationId: string;
   phoneNumber: string | undefined;
+  // The conversation's business number, so a reply always goes through the owning salesperson's
+  // number (e.g. an Admin replying in another salesperson's conversation uses that number).
+  whatsAppBusinessNumberId?: string;
   disabled?: boolean;
 };
 
 // Keyed by conversation.id in the parent, so this remounts (and its state resets) per conversation.
-export function Composer({ conversationId, phoneNumber, disabled }: ComposerProps) {
+export function Composer({ conversationId, phoneNumber, whatsAppBusinessNumberId, disabled }: ComposerProps) {
   const [message, setMessage] = useState("");
   const [attachment, setAttachment] = useState<MediaUploadResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,6 +70,7 @@ export function Composer({ conversationId, phoneNumber, disabled }: ComposerProp
         // Backend resolves the sender's business number from the conversation; phoneNumber
         // is sent for backward compatibility. The frontend never picks the Meta PhoneNumberId.
         conversationId,
+        whatsAppBusinessNumberId,
         phoneNumber,
         messageType: attachment ? attachment.messageType : "Text",
         mediaUrl: attachment?.mediaUrl,

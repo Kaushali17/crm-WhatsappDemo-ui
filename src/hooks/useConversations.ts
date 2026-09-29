@@ -5,10 +5,10 @@ import { queryKeys } from "./queryKeys";
 /** Polling interval for manual "real-time" refresh since the backend has no SignalR yet. */
 export const POLL_INTERVAL_MS = 5000;
 
-export function useConversations() {
+export function useConversations(salesUserId?: string) {
   return useQuery({
-    queryKey: queryKeys.conversations,
-    queryFn: conversationsApi.getAll,
+    queryKey: queryKeys.conversationsList(salesUserId),
+    queryFn: () => conversationsApi.getAll(salesUserId),
     refetchInterval: POLL_INTERVAL_MS,
   });
 }

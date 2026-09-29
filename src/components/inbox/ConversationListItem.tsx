@@ -27,8 +27,18 @@ export function ConversationListItem({ conversation, selected, onClick }: Conver
         <span className="truncate text-xs text-gray-500">
           {conversation.assignedUserName ? `Sales: ${conversation.assignedUserName}` : "Unassigned"}
         </span>
-        <StatusBadge status={conversation.status} />
+        <div className="flex items-center gap-1.5">
+          {typeof conversation.unreadCount === "number" && conversation.unreadCount > 0 && (
+            <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-whatsapp-teal px-1.5 py-0.5 text-[10px] font-semibold text-white">
+              {conversation.unreadCount}
+            </span>
+          )}
+          <StatusBadge status={conversation.status} />
+        </div>
       </div>
+      {conversation.lastMessage && (
+        <span className="truncate text-xs text-gray-500">{conversation.lastMessage}</span>
+      )}
       {conversation.whatsAppDisplayPhoneNumber && (
         <span className="truncate text-xs text-gray-400">
           WhatsApp: {conversation.whatsAppDisplayPhoneNumber}
