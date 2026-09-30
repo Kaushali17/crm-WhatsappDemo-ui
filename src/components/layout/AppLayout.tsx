@@ -1,13 +1,13 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useCurrentUser } from "../../auth/currentUser";
 
-// Admin-only items are management screens; a salesperson keeps only their core functionality.
+// Temporarily showing only Inbox; other nav items are hidden on request.
 const navItems = [
   { to: "/inbox", label: "Inbox", icon: "💬", adminOnly: false },
-  { to: "/customers", label: "Customers", icon: "👤", adminOnly: false },
-  { to: "/sales-users", label: "Sales Users", icon: "🧑‍💼", adminOnly: true },
-  { to: "/whatsapp-numbers", label: "WhatsApp Numbers", icon: "📱", adminOnly: true },
-  { to: "/simulate", label: "Simulate", icon: "🛠️", adminOnly: true },
+  // { to: "/customers", label: "Customers", icon: "👤", adminOnly: false },
+  // { to: "/sales-users", label: "Sales Users", icon: "🧑‍💼", adminOnly: true },
+  // { to: "/whatsapp-numbers", label: "WhatsApp Numbers", icon: "📱", adminOnly: true },
+  // { to: "/simulate", label: "Simulate", icon: "🛠️", adminOnly: true },
 ];
 
 export function AppLayout() {

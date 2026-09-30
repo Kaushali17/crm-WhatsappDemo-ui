@@ -1,49 +1,32 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { ConversationList } from "../components/inbox/ConversationList";
 import { MessageThread } from "../components/inbox/MessageThread";
 import { Composer } from "../components/inbox/Composer";
-import { ConversationDetailsPanel } from "../components/inbox/ConversationDetailsPanel";
 import { NewConversationModal } from "../components/inbox/NewConversationModal";
 import { EmptyState } from "../components/common/EmptyState";
 import { useConversation, useConversations } from "../hooks/useConversations";
 import { useMessages } from "../hooks/useMessages";
 import { useCurrentUser } from "../auth/currentUser";
 import { queryKeys } from "../hooks/queryKeys";
-import type { ConversationDto } from "../types";
 
 export function InboxPage() {
   const [searchParams] = useSearchParams();
-  const conversationIdParam = searchParams.get("conversationId") ?? undefined;  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const conversationIdParam = searchParams.get("conversationId") ?? undefined;
+  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [newConversationOpen, setNewConversationOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { isAdmin, conversationScopeUserId } = useCurrentUser();
-  // Admin can filter by a chosen salesperson; a salesperson is always scoped to their own id.
-  const [salesUserFilter, setSalesUserFilter] = useState("");
-  const conversationsSalesUserId = isAdmin ? salesUserFilter || undefined : conversationScopeUserId;
-
-  const conversationsQuery = useConversations(conversationsSalesUserId);
+  // A salesperson is scoped to their own id; an Admin sees all (undefined scope).
+  const { conversationScopeUserId } = useCurrentUser();
+  const conversationsQuery = useConversations(conversationScopeUserId);
   // Preselect a conversation passed via ?conversationId (e.g. after sending a template),
-  // then the user's explicit pick, then fall back to the newest conversation.
+  // then fall back to the newest conversation so a chat is always open.
   const effectiveSelectedId = selectedId ?? conversationIdParam ?? conversationsQuery.data?.[0]?.id;
   const selectedConversationQuery = useConversation(effectiveSelectedId);
   const messagesQuery = useMessages(effectiveSelectedId);
 
-  const handleSelect = (conversation: ConversationDto) => {
-    setSelectedId(conversation.id);
-  };
-
-  const handleRefreshAll = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-    if (effectiveSelectedId) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.messages(effectiveSelectedId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.conversation(effectiveSelectedId) });
-    }
-  };
-  // After a template starts a conversation, select/open it (the send hook already refreshes the
-  // conversation list and its messages). Falls back to a general refresh if no id is returned.
+  // After a template starts a conversation, select/open it and refresh the list.
   const handleConversationCreated = (conversationId: string | undefined) => {
     setNewConversationOpen(false);
     if (conversationId) {
@@ -57,27 +40,11 @@ export function InboxPage() {
 
   return (
     <div className="flex h-full w-full">
-      <div className="w-80 shrink-0">
-        <ConversationList
-          conversations={conversationsQuery.data}
-          isLoading={conversationsQuery.isLoading}
-          isError={conversationsQuery.isError}
-          selectedId={effectiveSelectedId}
-          onSelect={handleSelect}
-          onRefresh={handleRefreshAll}
-          isRefreshing={conversationsQuery.isFetching}
-          onNewConversation={() => setNewConversationOpen(true)}
-          showSalesUserFilter={isAdmin}
-          salesUserFilter={salesUserFilter}
-          onSalesUserFilterChange={setSalesUserFilter}
-        />
-      </div>
-
       {!effectiveSelectedId || !conversation ? (
         <div className="flex flex-1 items-center justify-center bg-whatsapp-panel">
           <EmptyState
-            title="Select a conversation"
-            description="Choose a conversation from the list to view the message thread."
+            title="No conversation to show"
+            description="There is no open conversation yet."
           />
         </div>
       ) : (
@@ -89,24 +56,6 @@ export function InboxPage() {
                   {conversation.customerName || conversation.customerWhatsAppNumber}
                 </h2>
                 <p className="text-xs text-gray-500">{conversation.customerWhatsAppNumber}</p>
-                {(conversation.assignedUserName || conversation.whatsAppDisplayPhoneNumber) && (
-                  <p className="mt-1 text-xs text-gray-500">
-                    {conversation.assignedUserName && (
-                      <span>
-                        Handled by: <span className="font-medium text-gray-700">{conversation.assignedUserName}</span>
-                      </span>
-                    )}
-                    {conversation.assignedUserName && conversation.whatsAppDisplayPhoneNumber && (
-                      <span className="mx-1 text-gray-300">·</span>
-                    )}
-                    {conversation.whatsAppDisplayPhoneNumber && (
-                      <span>
-                        WhatsApp:{" "}
-                        <span className="font-medium text-gray-700">{conversation.whatsAppDisplayPhoneNumber}</span>
-                      </span>
-                    )}
-                  </p>
-                )}
               </div>
             </div>
             <MessageThread
@@ -122,7 +71,6 @@ export function InboxPage() {
               disabled={conversation.status.toLowerCase() === "closed"}
             />
           </div>
-          <ConversationDetailsPanel conversation={conversation} />
         </div>
       )}
 
